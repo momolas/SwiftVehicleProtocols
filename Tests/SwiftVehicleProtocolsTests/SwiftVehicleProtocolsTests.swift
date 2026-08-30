@@ -89,4 +89,46 @@ struct SwiftVehicleProtocolsTests {
         let lidResp = try await sim.sendDiagnosticRequest("2100")
         #expect(lidResp.contains("61"))
     }
+
+    @Test("SAE J1939 PGN & Signal Decoding")
+    func testJ1939Decoding() {
+        // Test PGN 61444 (0xF004 - EEC1)
+        let canID: UInt32 = 0x0CF00400 // Priority 3, PGN 61444, SA 0
+        let header = J1939Header(canID: canID)
+        #expect(header.pgn == 61444)
+        #expect(header.priority == 3)
+        #expect(header.sourceAddress == 0)
+        #expect(header.isBroadcast == true)
+
+        let payload = Data([0xFF, 0x00, 0x7D, 0x00, 0x20, 0xFF, 0xFF, 0xFF]) // Torque: 125-125=0%, RPM: 8192*0.125 = 1024 rpm
+        let signals = J1939Decoder.decode(pgn: header.pgn, data: payload)
+        #expect(!signals.isEmpty)
+        if let rpmSignal = signals.first(where: { $0.spn == 190 }) {
+            #expect(rpmSignal.value == 1024.0)
+        }
+    }
+
+    @Test("CAN Protocol Auto-Detection")
+    func testProtocolDetection() {
+        // 1. J1939 detection (29-bit ID)
+        let j1939Class = CANProtocolDetector.detect(canID: 0x18FEEE00)
+        #expect(j1939Class.protocolType == .j1939)
+        #expect(j1939Class.is29BitExtended == true)
+
+        // 2. OBD-II Broadcast
+        let obdClass = CANProtocolDetector.detect(canID: 0x7DF)
+        #expect(obdClass.protocolType == .obd2)
+
+        // 3. OBD-II Physical Response
+        let respClass = CANProtocolDetector.detect(canID: 0x7E8)
+        #expect(respClass.protocolType == .obd2)
+
+        // 4. KWP2000 Legacy Diag
+        let kwpClass = CANProtocolDetector.detect(canID: 0x640)
+        #expect(kwpClass.protocolType == .kwp2000)
+
+        // 5. Generic CAN
+        let genericClass = CANProtocolDetector.detect(canID: 0x120)
+        #expect(genericClass.protocolType == .generic)
+    }
 }
