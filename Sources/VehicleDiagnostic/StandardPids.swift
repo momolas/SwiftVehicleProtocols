@@ -74,4 +74,11 @@ public enum StandardPids: Sendable {
         }
         return map
     }()
+
+    public static let bitmaskPIDs: Set<String> = ["00", "20", "40", "60", "80", "A0", "C0"]
+
+    public static func get(_ pidHex: String) -> PidDef? {
+        let clean = pidHex.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
+        return byPid[clean]
+    }
 }
