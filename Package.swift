@@ -35,7 +35,7 @@ let package = Package(
         ),
         .target(
             name: "VehicleDiagnostic",
-            dependencies: ["VehicleCore", "VehicleISOTP"],
+            dependencies: ["VehicleCore", "VehicleISOTP", "VehicleTransport"],
             path: "Sources/VehicleDiagnostic"
         ),
         .target(

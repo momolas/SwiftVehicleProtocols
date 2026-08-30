@@ -190,4 +190,32 @@ struct SwiftVehicleProtocolsTests {
         #expect(jsonExport.contains("INJECTION_EDC16"))
         #expect(jsonExport.contains("Linear"))
     }
+
+    @Test("DTC Decoder (SAE J1979 & KWP2000)")
+    func testDTCDecoder() {
+        #expect(DTCDecoder.decodeSingleDTC("0102") == "P0102")
+        #expect(DTCDecoder.decodeSingleDTC("C100") == "U0100")
+        #expect(DTCDecoder.decodeSingleDTC("4101") == "C0101")
+        #expect(DTCDecoder.decodeSingleDTC("8100") == "B0100")
+
+        let dtcs = DTCDecoder.decodeDTCList(from: "43 02 01 02 03 00")
+        #expect(dtcs == ["P0102", "P0300"])
+
+        let statusPresent = DTCDecoder.decodeKwpDtcStatus(0x80)
+        #expect(statusPresent.contains("Présent"))
+    }
+
+    @Test("KWP2000 Client Session & Services")
+    func testKWP2000Client() async throws {
+        let sim = SimulatorEngine()
+        let client = await KWP2000Client(interface: sim)
+
+        let sessionResp = try await client.startSession(mode: 0x85)
+        #expect(sessionResp.hasPrefix("5085"))
+
+        let lidData = try await client.readLocalIdentifier(lid: 0x00)
+        #expect(!lidData.isEmpty)
+
+        await client.stop()
+    }
 }
