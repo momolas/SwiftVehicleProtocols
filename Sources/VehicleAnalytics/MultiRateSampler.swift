@@ -26,11 +26,11 @@ public enum SamplingRate: String, Sendable, CaseIterable, Codable {
 public enum MultiRateSampler: Sendable {
     public static func defaultSamplingRate(for pid: PidDef) -> SamplingRate {
         switch pid.category {
-        case .engine, .speed, .pressure, .air:
+        case .rpm, .speed, .engine, .pressure, .air, .brakes:
             return .fast
-        case .fuel, .electrical:
+        case .fuel, .electrical, .battery, .hybrid, .transmission, .emissions:
             return .normal
-        case .temperature, .other:
+        case .temperature, .climate, .airbag, .lighting, .body, .diagnostics, .other:
             return .slow
         }
     }

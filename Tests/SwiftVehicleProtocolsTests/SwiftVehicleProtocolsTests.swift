@@ -236,4 +236,37 @@ struct SwiftVehicleProtocolsTests {
         let kwpVIN = VINReader.parseKWP2000VIN(hexKWP)
         #expect(kwpVIN == "VF1JM0G0D12345678")
     }
+
+    @Test("Standard PIDs Catalog & ECU Liveness")
+    func testStandardPidsAndLiveness() async throws {
+        #expect(StandardPids.all.count > 40)
+        #expect(StandardPids.byPid["0C"]?.displayName == "Engine RPM")
+
+        let sim = SimulatorEngine()
+        let isAlive = try await ECULiveness.check(driver: sim)
+        #expect(isAlive == true)
+    }
+
+    @Test("Profile & Bidirectional Unified Converter")
+    func testBidirectionalProfileConverter() {
+        let sampleProfile = Profile(
+            profileId: "test_profile",
+            profileVersion: "1.0",
+            displayName: "Test Profile",
+            description: "A test profile",
+            vehicleMatch: nil,
+            ecus: ["main": EcuDef(requestHeader: "7E0", responseHeader: "7E8")],
+            pids: [
+                PidDef(id: "rpm", displayName: "Engine RPM", ecu: "main", mode: "01", pid: "0C", unit: "rpm", formula: "(A*256+B)/4", category: .rpm)
+            ]
+        )
+
+        let unified = UnifiedProfileConverter.convert(legacyProfile: sampleProfile)
+        #expect(unified.name == "Test Profile")
+        #expect(unified.variants.first?.downloads.count == 1)
+
+        let restoredLegacy = UnifiedProfileConverter.toLegacyProfile(unified: unified)
+        #expect(restoredLegacy.displayName == "Test Profile")
+        #expect(restoredLegacy.pids.count == 1)
+    }
 }
