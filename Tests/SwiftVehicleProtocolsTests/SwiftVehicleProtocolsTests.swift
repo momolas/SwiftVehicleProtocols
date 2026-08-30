@@ -131,4 +131,63 @@ struct SwiftVehicleProtocolsTests {
         let genericClass = CANProtocolDetector.detect(canID: 0x120)
         #expect(genericClass.protocolType == .generic)
     }
+
+    @Test("Unified ECU Profile & DDT2000 Conversion")
+    func testUnifiedProfileConversion() throws {
+        let sampleDDTJSON = """
+        {
+            "ecuname": "INJECTION_EDC16",
+            "obd": {
+                "protocol": "CAN",
+                "send_id": "7E0",
+                "recv_id": "7E8",
+                "baudrate": 500000
+            },
+            "data": {
+                "Regime_Moteur": {
+                    "bitscount": 16,
+                    "step": 0.125,
+                    "offset": 0.0,
+                    "unit": "tr/min"
+                },
+                "Relais_Pompe": {
+                    "bitscount": 1,
+                    "step": 1.0,
+                    "offset": 0.0,
+                    "unit": ""
+                }
+            },
+            "requests": [
+                {
+                    "name": "Lecture Télémétrie Moteur",
+                    "sentbytes": "2101",
+                    "receivebyte_dataitems": {
+                        "Regime_Moteur": { "firstbyte": 2, "bitoffset": 0 }
+                    }
+                },
+                {
+                    "name": "Test Actionneur Relais",
+                    "sentbytes": "300101",
+                    "receivebyte_dataitems": {
+                        "Relais_Pompe": { "firstbyte": 1, "bitoffset": 0 }
+                    }
+                }
+            ]
+        }
+        """.data(using: .utf8)!
+
+        let profile = try DDT2UnifiedConverter.convert(jsonData: sampleDDTJSON)
+        #expect(profile.name == "INJECTION_EDC16")
+        #expect(profile.connections.count == 1)
+        #expect(profile.connections.first?.txId == "0x7E0")
+        #expect(profile.variants.count == 1)
+
+        let variant = try #require(profile.variants.first)
+        #expect(variant.downloads.count == 1)
+        #expect(variant.actuations.count == 1)
+
+        let jsonExport = try DDT2UnifiedConverter.exportToJSON(profile: profile)
+        #expect(jsonExport.contains("INJECTION_EDC16"))
+        #expect(jsonExport.contains("Linear"))
+    }
 }
