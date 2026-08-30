@@ -269,4 +269,65 @@ struct SwiftVehicleProtocolsTests {
         #expect(restoredLegacy.displayName == "Test Profile")
         #expect(restoredLegacy.pids.count == 1)
     }
+
+    @Test("ISO 14229 DTC Status Mask & DecodedDTC")
+    func testDTCStatusMaskAndDecoding() {
+        let mask = DTCStatusMask(rawValue: 0x2F) // testFailed(01), testFailedThisOperationCycle(02), pending(04), confirmed(08), testFailedSinceLastClear(20)
+        #expect(mask.contains(.testFailed))
+        #expect(mask.contains(.confirmedDTC))
+        #expect(!mask.contains(.warningIndicatorRequested))
+        #expect(!mask.summary.isEmpty)
+
+        // UDS 0x19 02 Response: 59 02 FF (010200 2F)
+        let udsPayload = "59 02 FF 01 02 00 2F"
+        let decoded = DTCDecoder.decodeDTCsWithStatus(from: udsPayload)
+        #expect(decoded.count == 1)
+        #expect(decoded.first?.code == "P0102")
+        #expect(decoded.first?.statusMask?.contains(.confirmedDTC) == true)
+    }
+
+    @Test("UDS Client Services Execution")
+    func testUDSClient() async throws {
+        let sim = SimulatorEngine()
+        let client = UDSClient(interface: sim)
+
+        let session = try await client.startSession(sessionType: 0x01)
+        #expect(session.hasPrefix("5001"))
+
+        let didData = try await client.readDataByIdentifier(0xF190)
+        #expect(didData.contains("564631"))
+
+        let dtcs = try await client.readDTCInformation(reportType: .reportDTCByStatusMask)
+        #expect(dtcs.count >= 1)
+
+        try await client.ecuReset(type: .hardReset)
+        await client.stop()
+    }
+
+    @Test("DoIP Header Framing & Client Session")
+    func testDoIPFramingAndClient() async throws {
+        // Encode / Decode DoIP Message
+        let payload = Data([0x0E, 0x00, 0x0E, 0x80, 0x10, 0x01])
+        let originalMsg = DoIPMessage(protocolVersion: 0x02, payloadType: .diagnosticMessage, payload: payload)
+        let encodedData = originalMsg.encode()
+        #expect(encodedData.count == 8 + payload.count)
+
+        let decodedMsg = DoIPMessage.decode(from: encodedData)
+        #expect(decodedMsg != nil)
+        #expect(decodedMsg?.payloadType == .diagnosticMessage)
+        #expect(decodedMsg?.payload == payload)
+
+        // DoIP Client Simulation
+        let doipClient = DoIPClient()
+        try await doipClient.connect()
+        #expect(await doipClient.isConnected == true)
+        #expect(await doipClient.isRoutingActivated == true)
+
+        let resp = try await doipClient.sendDiagnosticRequest("1001")
+        #expect(resp == "5001")
+
+        await doipClient.disconnect()
+        #expect(await doipClient.isConnected == false)
+    }
 }
+

@@ -24,12 +24,37 @@ public actor SimulatorEngine: VehicleInterface {
     public func sendDiagnosticRequest(_ requestHex: String, timeout: TimeInterval = 2.0) async throws -> String {
         let clean = requestHex.replacingOccurrences(of: " ", with: "").uppercased()
 
-        // 1. Session request
+        // 1. Session request (10)
         if clean.hasPrefix("10") {
             return "50" + clean.dropFirst(2) + "003201F4"
         }
 
-        // 2. Read Local Identifier (21 XX)
+        // 2. ECU Reset (11)
+        if clean.hasPrefix("11") {
+            return "51" + clean.dropFirst(2)
+        }
+
+        // 3. Clear DTCs (14)
+        if clean.hasPrefix("14") {
+            return "54"
+        }
+
+        // 4. Read DTC Info (19)
+        if clean.hasPrefix("19") {
+            return "5902FF0102002F"
+        }
+
+        // 5. Read Data By Identifier (22)
+        if clean.hasPrefix("22") {
+            let did = String(clean.dropFirst(2).prefix(4))
+            if did == "F190" {
+                // Mock VIN: "VF1JM0G0D12345678"
+                return "62F1905646314A4D304730443132333435363738"
+            }
+            return "62" + did + "00AA"
+        }
+
+        // 6. Read Local Identifier (21 XX)
         if clean.hasPrefix("21") {
             let lid = String(clean.dropFirst(2).prefix(2))
             if lid == "00" {
@@ -42,18 +67,18 @@ public actor SimulatorEngine: VehicleInterface {
             return "61" + lid + "0000"
         }
 
-        // 3. Write Local Identifier (3B XX)
+        // 7. Write Local Identifier (3B XX)
         if clean.hasPrefix("3B") {
             let lid = String(clean.dropFirst(2).prefix(2))
             return "7B" + lid
         }
 
-        // 4. Routine Control / Actuators (30 / 31)
+        // 8. Routine Control / Actuators (30 / 31)
         if clean.hasPrefix("30") || clean.hasPrefix("31") {
             return "7101"
         }
 
-        // 5. OBD-II Mode 01
+        // 9. OBD-II Mode 01
         if clean.hasPrefix("01") {
             let pid = String(clean.dropFirst(2).prefix(2))
             if pid == "0C" {
