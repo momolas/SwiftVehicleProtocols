@@ -410,5 +410,60 @@ struct SwiftVehicleProtocolsTests {
         #expect(legacyProfile.pids.count == 2)
         #expect(legacyProfile.pids.first(where: { $0.unit == "bar" }) != nil)
     }
+
+    @Test("OBD2Analyzer Request & Response Decoding")
+    func testOBD2Analyzer() {
+        let desc = OBD2Analyzer.describeRequest("2190")
+        #expect(desc.contains("Read Data By Local Identifier"))
+        #expect(desc.contains("VIN"))
+
+        let udsDesc = OBD2Analyzer.describeRequest("22F190")
+        #expect(udsDesc.contains("Read Data By Identifier"))
+        #expect(udsDesc.contains("VIN"))
+
+        let nrcResp = OBD2Analyzer.decodeResponse(request: "22F190", response: "7F2231")
+        #expect(nrcResp?.contains("31") == true)
+        #expect(nrcResp?.contains("Rejet") == true)
+
+        let posResp = OBD2Analyzer.decodeResponse(request: "1003", response: "5003")
+        #expect(posResp?.contains("Extended Diagnostic Session") == true)
+    }
+
+    @Test("BusCoordinator Concurrency Lock & Preemption")
+    @MainActor
+    func testBusCoordinator() async {
+        let coordinator = BusCoordinator()
+        #expect(!coordinator.isBusy)
+
+        await coordinator.acquire(priority: .interactive, name: "Live Data")
+        #expect(coordinator.isBusy)
+        #expect(coordinator.activePriority == .interactive)
+        #expect(coordinator.activeSessionName == "Live Data")
+
+        coordinator.release()
+        #expect(!coordinator.isBusy)
+    }
+
+    @Test("RegistryBuilder Combine PIDs")
+    func testRegistryBuilder() {
+        let profile = Profile(
+            profileId: "test_car",
+            profileVersion: "1.0",
+            displayName: "Test Car",
+            ecus: ["ECM": EcuDef(requestHeader: "7E0", responseHeader: "7E8")],
+            pids: [
+                PidDef(id: "custom_oil_temp", displayName: "Oil Temp", ecu: "ECM", mode: "22", pid: "1155", unit: "°C", formula: "A-40", category: .temperature)
+            ]
+        )
+
+        let combined = RegistryBuilder.build(
+            profile: profile,
+            supportedStandardPIDs: ["0C", "0D"],
+            supportedProfilePIDs: ["custom_oil_temp"]
+        )
+
+        #expect(combined.count >= 2)
+        #expect(combined.contains(where: { $0.id == "custom_oil_temp" }))
+    }
 }
 
