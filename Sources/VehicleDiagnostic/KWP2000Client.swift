@@ -277,6 +277,109 @@ public final class KWP2000Client {
         testerPresentTask = nil
     }
 
+    /// Requête d'upload de mémoire (Service 35 - Request Upload)
+    public func requestUpload(memoryAddress: UInt32, uncompressedSize: UInt32) async throws -> String {
+        let addrHex = String(format: "%06X", memoryAddress)
+        let sizeHex = String(format: "%06X", uncompressedSize)
+        let command = "35" + addrHex + sizeHex
+        let response = try await interface.sendDiagnosticRequest(command, timeout: 3.0)
+        let clean = response.replacingOccurrences(of: " ", with: "").uppercased()
+
+        if clean.hasPrefix("7F35") {
+            let nrc = UInt8(clean.dropFirst(4).prefix(2), radix: 16) ?? 0
+            throw KWP2000Error.negativeResponse(service: 0x35, nrc: nrc)
+        }
+        guard clean.hasPrefix("75") else {
+            throw KWP2000Error.unexpectedResponse(expected: "75", received: response)
+        }
+        return clean
+    }
+
+    /// Requête de téléchargement / flash de mémoire (Service 34 - Request Download)
+    public func requestDownload(memoryAddress: UInt32, uncompressedSize: UInt32) async throws -> String {
+        let addrHex = String(format: "%06X", memoryAddress)
+        let sizeHex = String(format: "%06X", uncompressedSize)
+        let command = "34" + addrHex + sizeHex
+        let response = try await interface.sendDiagnosticRequest(command, timeout: 3.0)
+        let clean = response.replacingOccurrences(of: " ", with: "").uppercased()
+
+        if clean.hasPrefix("7F34") {
+            let nrc = UInt8(clean.dropFirst(4).prefix(2), radix: 16) ?? 0
+            throw KWP2000Error.negativeResponse(service: 0x34, nrc: nrc)
+        }
+        guard clean.hasPrefix("74") else {
+            throw KWP2000Error.unexpectedResponse(expected: "74", received: response)
+        }
+        return clean
+    }
+
+    /// Transfert d'un bloc de données (Service 36 - Transfer Data)
+    public func transferData(blockSequenceCounter: UInt8, payload: String = "") async throws -> String {
+        let blockHex = String(format: "%02X", blockSequenceCounter)
+        let cleanPayload = payload.replacingOccurrences(of: " ", with: "").uppercased()
+        let command = "36" + blockHex + cleanPayload
+        let response = try await interface.sendDiagnosticRequest(command, timeout: 2.5)
+        let clean = response.replacingOccurrences(of: " ", with: "").uppercased()
+
+        if clean.hasPrefix("7F36") {
+            let nrc = UInt8(clean.dropFirst(4).prefix(2), radix: 16) ?? 0
+            throw KWP2000Error.negativeResponse(service: 0x36, nrc: nrc)
+        }
+        guard clean.hasPrefix("76") else {
+            throw KWP2000Error.unexpectedResponse(expected: "76", received: response)
+        }
+        return clean
+    }
+
+    /// Sortie du mode transfert (Service 37 - Request Transfer Exit)
+    public func requestTransferExit() async throws -> String {
+        let response = try await interface.sendDiagnosticRequest("37", timeout: 2.0)
+        let clean = response.replacingOccurrences(of: " ", with: "").uppercased()
+
+        if clean.hasPrefix("7F37") {
+            let nrc = UInt8(clean.dropFirst(4).prefix(2), radix: 16) ?? 0
+            throw KWP2000Error.negativeResponse(service: 0x37, nrc: nrc)
+        }
+        guard clean.hasPrefix("77") else {
+            throw KWP2000Error.unexpectedResponse(expected: "77", received: response)
+        }
+        return clean
+    }
+
+    /// Exécute une routine de diagnostic (Service 31 - Routine Control)
+    public func startRoutine(routineType: UInt8 = 0x01, routineId: UInt16, options: String = "") async throws -> String {
+        let cmdType = String(format: "%02X", routineType)
+        let cmdId = String(format: "%04X", routineId)
+        let cleanOptions = options.replacingOccurrences(of: " ", with: "").uppercased()
+        let command = "31" + cmdType + cmdId + cleanOptions
+        let response = try await interface.sendDiagnosticRequest(command, timeout: 4.0)
+        let clean = response.replacingOccurrences(of: " ", with: "").uppercased()
+
+        if clean.hasPrefix("7F31") {
+            let nrc = UInt8(clean.dropFirst(4).prefix(2), radix: 16) ?? 0
+            throw KWP2000Error.negativeResponse(service: 0x31, nrc: nrc)
+        }
+        guard clean.hasPrefix("71") else {
+            throw KWP2000Error.unexpectedResponse(expected: "71", received: response)
+        }
+        return clean
+    }
+
+    /// Redémarrage du calculateur (Service 11 - ECU Reset)
+    public func ecuReset(resetType: UInt8 = 0x01) async throws {
+        let command = String(format: "11%02X", resetType)
+        let response = try await interface.sendDiagnosticRequest(command, timeout: 2.0)
+        let clean = response.replacingOccurrences(of: " ", with: "").uppercased()
+
+        if clean.hasPrefix("7F11") {
+            let nrc = UInt8(clean.dropFirst(4).prefix(2), radix: 16) ?? 0
+            throw KWP2000Error.negativeResponse(service: 0x11, nrc: nrc)
+        }
+        guard clean.hasPrefix("51") else {
+            throw KWP2000Error.unexpectedResponse(expected: "51", received: response)
+        }
+    }
+
     public func stop() {
         stopTesterPresent()
     }
