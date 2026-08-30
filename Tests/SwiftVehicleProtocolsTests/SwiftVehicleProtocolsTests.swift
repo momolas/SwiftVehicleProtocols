@@ -329,5 +329,23 @@ struct SwiftVehicleProtocolsTests {
         await doipClient.disconnect()
         #expect(await doipClient.isConnected == false)
     }
+
+    @Test("BLE OBD-II Driver Connection & Diagnostic Requests")
+    func testBLEOBDDriver() async throws {
+        let bleDriver = BLEOBDDriver()
+        try await bleDriver.connect()
+        #expect(await bleDriver.isConnected == true)
+
+        try await bleDriver.setTarget(txID: "7E0", rxID: "7E8")
+
+        let rpmResp = try await bleDriver.sendDiagnosticRequest("010C")
+        #expect(rpmResp.contains("41 0C"))
+
+        let vinResp = try await bleDriver.sendDiagnosticRequest("22F190")
+        #expect(vinResp.contains("56 46 31"))
+
+        await bleDriver.disconnect()
+        #expect(await bleDriver.isConnected == false)
+    }
 }
 
