@@ -347,5 +347,68 @@ struct SwiftVehicleProtocolsTests {
         await bleDriver.disconnect()
         #expect(await bleDriver.isConnected == false)
     }
+
+    @Test("OBDb Signalset Import & Conversion to UnifiedECUProfile")
+    func testOBDbImporter() throws {
+        let sampleJson = """
+        {
+          "diagnosticLevel": "extended",
+          "commands": [
+            {
+              "hdr": "7E0",
+              "cmd": "2211A4",
+              "freq": 0.1,
+              "signals": [
+                {
+                  "id": "turbo_boost_pressure",
+                  "name": "Pression de Suralimentation",
+                  "path": "Moteur/Turbo",
+                  "fmt": {
+                    "bytes": 2,
+                    "scale": 0.01,
+                    "offset": 0.0,
+                    "unit": "bar"
+                  }
+                }
+              ]
+            },
+            {
+              "hdr": "7E4",
+              "cmd": "22F401",
+              "freq": 1.0,
+              "signals": [
+                {
+                  "id": "hv_battery_soh",
+                  "name": "State of Health Batterie",
+                  "path": "Batterie/Santé",
+                  "fmt": {
+                    "bytes": 1,
+                    "scale": 0.5,
+                    "offset": 0.0,
+                    "unit": "%"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+        """
+
+        let data = sampleJson.data(using: .utf8)!
+        let unifiedProfile = try OBDbImporter.convert(
+            jsonData: data,
+            vehicleName: "BMW 3 Series G20",
+            profileId: "bmw_3series_g20"
+        )
+
+        #expect(unifiedProfile.name == "BMW 3 Series G20")
+        #expect(unifiedProfile.connections.count == 2)
+        #expect(unifiedProfile.variants.first?.downloads.count == 2)
+
+        let legacyProfile = UnifiedProfileConverter.toLegacyProfile(unified: unifiedProfile, id: "bmw_3series_g20")
+        #expect(legacyProfile.displayName == "BMW 3 Series G20")
+        #expect(legacyProfile.pids.count == 2)
+        #expect(legacyProfile.pids.first(where: { $0.unit == "bar" }) != nil)
+    }
 }
 
