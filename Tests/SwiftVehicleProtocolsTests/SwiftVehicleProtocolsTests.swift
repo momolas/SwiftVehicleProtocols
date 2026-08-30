@@ -218,4 +218,22 @@ struct SwiftVehicleProtocolsTests {
 
         await client.stop()
     }
+
+    @Test("VIN Reader & Decoders (OBD2, UDS, KWP2000)")
+    func testVINReader() {
+        // 1. OBD-II Mode 09 PID 02 (ASCII: VF1JM0G0D12345678)
+        let hexOBD2 = "4902015646314A4D304730443132333435363738"
+        let obdVIN = VINReader.parseOBD2VIN(hexOBD2)
+        #expect(obdVIN == "VF1JM0G0D12345678")
+
+        // 2. UDS DID F190
+        let hexUDS = "62F1905646314A4D304730443132333435363738"
+        let udsVIN = VINReader.parseUDSVIN(hexUDS)
+        #expect(udsVIN == "VF1JM0G0D12345678")
+
+        // 3. KWP2000 LID 81
+        let hexKWP = "61815646314A4D304730443132333435363738"
+        let kwpVIN = VINReader.parseKWP2000VIN(hexKWP)
+        #expect(kwpVIN == "VF1JM0G0D12345678")
+    }
 }
