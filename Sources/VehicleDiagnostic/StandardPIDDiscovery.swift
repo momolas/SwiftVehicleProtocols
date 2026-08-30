@@ -44,9 +44,9 @@ public enum StandardPIDDiscovery {
     private static func parseBitmap(response: String, requestedPid: Int) -> UInt32? {
         guard let bytes = HexParsing.bytes(
             response
-                .replacingOccurrences(of: " ", with: "")
-                .replacingOccurrences(of: "\n", with: "")
-                .replacingOccurrences(of: "\r", with: "")
+                .replacing( " ", with: "")
+                .replacing( "\n", with: "")
+                .replacing( "\r", with: "")
         ) else { return nil }
 
         let pp = UInt8(requestedPid)

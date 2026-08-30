@@ -231,9 +231,9 @@ public final class Sampler {
                 
                 try? await Task.sleep(for: .nanoseconds(Int(interQueryGapNs)))
                 let normalized = response.uppercased()
-                    .replacingOccurrences(of: " ", with: "")
-                    .replacingOccurrences(of: "\n", with: "")
-                    .replacingOccurrences(of: "\r", with: "")
+                    .replacing( " ", with: "")
+                    .replacing( "\n", with: "")
+                    .replacing( "\r", with: "")
                 if normalized.contains("NODATA") || normalized.contains("STOPPED") {
                     for def in defs { bumpStrike(def.id) }
                     continue
@@ -323,7 +323,7 @@ public final class Sampler {
         let prefix = String(format: "%02X%@", modeByte + 0x40, pid.uppercased())
         let lines = response.uppercased()
             .components(separatedBy: .whitespacesAndNewlines)
-            .map { $0.trimmingCharacters(in: .whitespaces).replacingOccurrences(of: " ", with: "") }
+            .map { $0.trimmingCharacters(in: .whitespaces).replacing( " ", with: "") }
             .filter { !$0.isEmpty }
             .map { line -> String in
                 if let colonIdx = line.firstIndex(of: ":"),

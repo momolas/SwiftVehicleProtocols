@@ -189,7 +189,7 @@ public final class OBD2Analyzer: Sendable {
 
     /// Décrit une requête de diagnostic à partir de son format hexadécimal (ex: "2190" -> "Read Data By Local Identifier (KWP2000) · VIN (Vehicle Identification Number) (LID 90)")
     public static func describeRequest(_ hex: String) -> String {
-        let cleanHex = hex.replacingOccurrences(of: " ", with: "").uppercased()
+        let cleanHex = hex.replacing( " ", with: "").uppercased()
 
         // Détection et nettoyage des commandes hybrides de fuzzing LID
         var bytes: [UInt8] = []
@@ -279,8 +279,8 @@ public final class OBD2Analyzer: Sendable {
 
     /// Tente de décoder et formater de manière exhaustive les résultats de diagnostic KWP2000 et UDS.
     public static func decodeResponse(request: String, response: String) -> String? {
-        let cleanReq = request.replacingOccurrences(of: " ", with: "").uppercased()
-        let cleanResp = response.replacingOccurrences(of: " ", with: "").uppercased()
+        let cleanReq = request.replacing( " ", with: "").uppercased()
+        let cleanResp = response.replacing( " ", with: "").uppercased()
 
         // Redirection intelligente des commandes contenant "LID"
         var reqBytes: [UInt8] = []

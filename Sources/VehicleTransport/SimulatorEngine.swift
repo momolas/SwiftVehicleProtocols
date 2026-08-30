@@ -22,7 +22,7 @@ public actor SimulatorEngine: VehicleInterface {
     }
 
     public func sendDiagnosticRequest(_ requestHex: String, timeout: TimeInterval = 2.0) async throws -> String {
-        let clean = requestHex.replacingOccurrences(of: " ", with: "").uppercased()
+        let clean = requestHex.replacing( " ", with: "").uppercased()
 
         // 1. Session request (10)
         if clean.hasPrefix("10") {

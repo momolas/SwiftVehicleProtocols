@@ -6,7 +6,7 @@ public enum DTCDecoder: Sendable {
 
     /// Décode un code DTC brut hexadécimal sur 2 octets (4 caractères, ex: "0102" -> "P0102")
     public static func decodeSingleDTC(_ hex: String) -> String? {
-        let cleanHex = hex.replacingOccurrences(of: " ", with: "")
+        let cleanHex = hex.replacing( " ", with: "")
         guard cleanHex.count >= 4, let value = UInt16(cleanHex.prefix(4), radix: 16) else { return nil }
 
         let highByte = UInt8((value >> 8) & 0xFF)
@@ -58,7 +58,7 @@ public enum DTCDecoder: Sendable {
 
     /// Extrait une liste de DTCs enrichis avec leur masque de statut (ISO 14229 / ISO 14230).
     public static func decodeDTCsWithStatus(from hexPayload: String) -> [DecodedDTC] {
-        let clean = hexPayload.replacingOccurrences(of: " ", with: "")
+        let clean = hexPayload.replacing( " ", with: "")
         var results: [DecodedDTC] = []
 
         // 1. OBD-II Mode 03 (43...), Mode 07 (47...), Mode 0A (4A...)

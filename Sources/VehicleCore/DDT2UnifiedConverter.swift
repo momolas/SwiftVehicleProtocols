@@ -80,7 +80,7 @@ public enum DDT2UnifiedConverter {
         let dataDefs = ddt.data ?? [:]
 
         for req in (ddt.requests ?? []) {
-            let sentBytes = req.sentbytes.replacingOccurrences(of: " ", with: "").uppercased()
+            let sentBytes = req.sentbytes.replacing( " ", with: "").uppercased()
             let reqName = req.name.isEmpty ? "Req_\(sentBytes)" : req.name
 
             var outputParams: [UnifiedParameter] = []

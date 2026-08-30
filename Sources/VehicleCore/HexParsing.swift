@@ -2,9 +2,10 @@ import Foundation
 
 public enum HexParsing: Sendable {
     public static func bytes(_ hexString: String) -> [UInt8]? {
-        let clean = hexString.replacingOccurrences(of: " ", with: "")
-            .replacingOccurrences(of: "\r", with: "")
-            .replacingOccurrences(of: "\n", with: "")
+        let clean = hexString
+            .replacing(" ", with: "")
+            .replacing("\r", with: "")
+            .replacing("\n", with: "")
         guard clean.count % 2 == 0 else { return nil }
         var result = [UInt8]()
         result.reserveCapacity(clean.count / 2)
@@ -19,6 +20,9 @@ public enum HexParsing: Sendable {
     }
 
     public static func hex(_ bytes: [UInt8]) -> String {
-        bytes.map { String(format: "%02X", $0) }.joined()
+        bytes.map {
+            let s = String($0, radix: 16, uppercase: true)
+            return s.count == 1 ? "0" + s : s
+        }.joined()
     }
 }

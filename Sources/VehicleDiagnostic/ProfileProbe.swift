@@ -29,9 +29,9 @@ public enum ProfileProbe: Sendable {
                     let response = try await driver.sendDiagnosticRequest(request, timeout: 1.5)
                     let normalized = response
                         .uppercased()
-                        .replacingOccurrences(of: " ", with: "")
-                        .replacingOccurrences(of: "\n", with: "")
-                        .replacingOccurrences(of: "\r", with: "")
+                        .replacing( " ", with: "")
+                        .replacing( "\n", with: "")
+                        .replacing( "\r", with: "")
 
                     if normalized.contains("NODATA") || normalized.contains("STOPPED") {
                         continue

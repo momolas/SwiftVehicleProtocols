@@ -175,7 +175,7 @@ public enum VINReader: Sendable {
     private static func openDiagnosticSession(interface: VehicleInterface) async throws -> Bool {
         for sessionCmd in ["1085", "1086", "1003", "1001"] {
             if let res = try? await interface.sendDiagnosticRequest(sessionCmd, timeout: 1.0) {
-                let normalized = res.uppercased().replacingOccurrences(of: " ", with: "")
+                let normalized = res.uppercased().replacing( " ", with: "")
                 if !normalized.starts(with: "7F") && !normalized.isEmpty {
                     return true
                 }

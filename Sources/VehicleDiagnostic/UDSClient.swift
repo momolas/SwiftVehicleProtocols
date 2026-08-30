@@ -116,7 +116,7 @@ public actor UDSClient {
         let response = try await sendRaw(hexCmd)
         try validatePositiveResponse(response, expectedSID: 0x22)
         
-        let clean = response.replacingOccurrences(of: " ", with: "")
+        let clean = response.replacing( " ", with: "")
         // Enlève 62 + DID (6 caractères)
         guard clean.count >= 6 else { return "" }
         return String(clean.dropFirst(6))
@@ -125,7 +125,7 @@ public actor UDSClient {
     // MARK: - WriteDataByIdentifier (0x2E)
 
     public func writeDataByIdentifier(_ did: UInt16, dataHex: String) async throws {
-        let cleanData = dataHex.replacingOccurrences(of: " ", with: "")
+        let cleanData = dataHex.replacing( " ", with: "")
         let hexCmd = String(format: "2E%04X%@", did, cleanData)
         let response = try await sendRaw(hexCmd)
         try validatePositiveResponse(response, expectedSID: 0x2E)
@@ -143,7 +143,7 @@ public actor UDSClient {
         let seedResponse = try await sendRaw(seedCmd)
         try validatePositiveResponse(seedResponse, expectedSID: 0x27)
 
-        let cleanSeedResp = seedResponse.replacingOccurrences(of: " ", with: "")
+        let cleanSeedResp = seedResponse.replacing( " ", with: "")
         guard cleanSeedResp.count >= 4 else {
             throw UDSError.invalidResponseFormat("Graine UDS trop courte: \(seedResponse)")
         }
@@ -173,7 +173,7 @@ public actor UDSClient {
     // MARK: - InputOutputControlByIdentifier (0x2F)
 
     public func inputOutputControl(did: UInt16, controlType: IOControlType, controlState: String = "") async throws -> String {
-        let cleanState = controlState.replacingOccurrences(of: " ", with: "")
+        let cleanState = controlState.replacing( " ", with: "")
         let hexCmd = String(format: "2F%04X%02X%@", did, controlType.rawValue, cleanState)
         let response = try await sendRaw(hexCmd)
         try validatePositiveResponse(response, expectedSID: 0x2F)
@@ -183,7 +183,7 @@ public actor UDSClient {
     // MARK: - RoutineControl (0x31)
 
     public func startRoutine(routineType: UInt8 = 0x01, routineId: UInt16, optionHex: String = "") async throws -> String {
-        let cleanOption = optionHex.replacingOccurrences(of: " ", with: "")
+        let cleanOption = optionHex.replacing( " ", with: "")
         let hexCmd = String(format: "31%02X%04X%@", routineType, routineId, cleanOption)
         let response = try await sendRaw(hexCmd)
         try validatePositiveResponse(response, expectedSID: 0x31)
@@ -217,14 +217,14 @@ public actor UDSClient {
     private func sendRaw(_ hex: String) async throws -> String {
         do {
             let res = try await interface.sendDiagnosticRequest(hex, timeout: 2.0)
-            return res.replacingOccurrences(of: " ", with: "")
+            return res.replacing( " ", with: "")
         } catch {
             throw UDSError.transportError(error.localizedDescription)
         }
     }
 
     private func validatePositiveResponse(_ responseHex: String, expectedSID: UInt8) throws {
-        let clean = responseHex.replacingOccurrences(of: " ", with: "").uppercased()
+        let clean = responseHex.replacing( " ", with: "").uppercased()
 
         if clean.hasPrefix("7F") {
             guard clean.count >= 6 else {

@@ -110,7 +110,7 @@ public enum OBDbImporter: Sendable {
         var downloadServices: [UnifiedService] = []
 
         for cmd in signalset.commands {
-            let cleanHdr = cmd.hdr.replacingOccurrences(of: "0x", with: "").uppercased()
+            let cleanHdr = cmd.hdr.replacing( "0x", with: "").uppercased()
             if !headersSeen.contains(cleanHdr) {
                 headersSeen.insert(cleanHdr)
                 let txVal = UInt32(cleanHdr, radix: 16) ?? 0x7E0

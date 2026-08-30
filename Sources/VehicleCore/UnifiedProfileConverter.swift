@@ -106,13 +106,13 @@ public enum UnifiedProfileConverter: Sendable {
 
     /// Convertit un `UnifiedECUProfile` vers le format `Profile` hérité pour rétrocompatibilité UI
     public static func toLegacyProfile(unified: UnifiedECUProfile, id: String? = nil) -> Profile {
-        let profileId = id ?? unified.name.lowercased().replacingOccurrences(of: " ", with: "_")
+        let profileId = id ?? unified.name.lowercased().replacing( " ", with: "_")
         var ecus: [String: EcuDef] = [:]
 
         for (index, conn) in unified.connections.enumerated() {
             let ecuKey = index == 0 ? "main" : "ecu_\(index)"
-            let tx = conn.txId.replacingOccurrences(of: "0x", with: "").replacingOccurrences(of: "0X", with: "")
-            let rx = conn.rxId.replacingOccurrences(of: "0x", with: "").replacingOccurrences(of: "0X", with: "")
+            let tx = conn.txId.replacing( "0x", with: "").replacing( "0X", with: "")
+            let rx = conn.rxId.replacing( "0x", with: "").replacing( "0X", with: "")
             ecus[ecuKey] = EcuDef(requestHeader: tx, responseHeader: rx)
         }
 
@@ -125,7 +125,7 @@ public enum UnifiedProfileConverter: Sendable {
 
         if let variant = unified.variants.first {
             for service in variant.downloads {
-                let payload = service.payloadHex.replacingOccurrences(of: " ", with: "").uppercased()
+                let payload = service.payloadHex.replacing( " ", with: "").uppercased()
                 let mode: String
                 let pid: String
 
@@ -147,7 +147,7 @@ public enum UnifiedProfileConverter: Sendable {
                                            (param.name.localizedCaseInsensitiveContains("temp") ? .temperature : .engine))
 
                     let pidDef = PidDef(
-                        id: "\(profileId)_\(param.name.lowercased().replacingOccurrences(of: " ", with: "_"))",
+                        id: "\(profileId)_\(param.name.lowercased().replacing( " ", with: "_"))",
                         displayName: param.name,
                         ecu: primaryEcuKey,
                         mode: mode,
@@ -185,7 +185,7 @@ public enum UnifiedProfileConverter: Sendable {
     }
 
     private static func parseFormula(_ formula: String) -> (startBit: Int, lengthBits: Int, format: UnifiedDataFormat) {
-        let cleaned = formula.replacingOccurrences(of: " ", with: "")
+        let cleaned = formula.replacing( " ", with: "")
         let letters = cleaned.filter { $0 >= "A" && $0 <= "Z" }
         guard let firstLetter = letters.first else {
             return (0, 8, .identical)
@@ -218,19 +218,19 @@ public enum UnifiedProfileConverter: Sendable {
         var offset: Double = 0.0
 
         if let multRange = formula.range(of: multPattern, options: .regularExpression) {
-            let multStr = String(formula[multRange]).replacingOccurrences(of: "*", with: "")
+            let multStr = String(formula[multRange]).replacing( "*", with: "")
             if let parsedMult = Double(multStr) {
                 mult = parsedMult
             }
         }
 
         if let plusRange = formula.range(of: #"\+([0-9.]+)"#, options: .regularExpression) {
-            let offsetStr = String(formula[plusRange]).replacingOccurrences(of: "+", with: "")
+            let offsetStr = String(formula[plusRange]).replacing( "+", with: "")
             if let parsedOffset = Double(offsetStr) {
                 offset = parsedOffset
             }
         } else if let minusRange = formula.range(of: #"-([0-9.]+)"#, options: .regularExpression) {
-            let offsetStr = String(formula[minusRange]).replacingOccurrences(of: "-", with: "")
+            let offsetStr = String(formula[minusRange]).replacing( "-", with: "")
             if let parsedOffset = Double(offsetStr) {
                 offset = -parsedOffset
             }

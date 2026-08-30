@@ -122,7 +122,7 @@ public actor BLEOBDDriver: NSObject, VehicleInterface {
         }
 
         // Mode simulateur / fallback autonome pour les requêtes OBD-II & UDS standards
-        let upper = cleanCmd.uppercased().replacingOccurrences(of: " ", with: "")
+        let upper = cleanCmd.uppercased().replacing( " ", with: "")
         if upper.hasPrefix("AT") {
             return "OK"
         } else if upper.hasPrefix("0100") {
@@ -158,8 +158,8 @@ public actor BLEOBDDriver: NSObject, VehicleInterface {
         // Détection de fin de réponse ELM327 (caractère prompt '>')
         if responseBuffer.contains(">") {
             let cleanResponse = responseBuffer
-                .replacingOccurrences(of: ">", with: "")
-                .replacingOccurrences(of: "\r", with: "\n")
+                .replacing( ">", with: "")
+                .replacing( "\r", with: "\n")
                 .trimmingCharacters(in: .whitespacesAndNewlines)
 
             responseContinuation?.resume(returning: cleanResponse)

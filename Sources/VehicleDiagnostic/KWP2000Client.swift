@@ -92,7 +92,7 @@ public final class KWP2000Client {
         let hexMode = String(format: "%02X", mode)
         let command = "10" + hexMode
         let response = try await interface.sendDiagnosticRequest(command, timeout: 2.0)
-        let cleanResponse = response.replacingOccurrences(of: " ", with: "").uppercased()
+        let cleanResponse = response.replacing( " ", with: "").uppercased()
 
         if cleanResponse.hasPrefix("7F10") {
             let nrcByte = UInt8(cleanResponse.dropFirst(4).prefix(2), radix: 16) ?? 0
@@ -118,7 +118,7 @@ public final class KWP2000Client {
         let hexLid = String(format: "%02X", lid)
         let command = "21" + hexLid
         let response = try await interface.sendDiagnosticRequest(command, timeout: 1.5)
-        let cleanResponse = response.replacingOccurrences(of: " ", with: "").uppercased()
+        let cleanResponse = response.replacing( " ", with: "").uppercased()
 
         if cleanResponse.hasPrefix("7F21") {
             let nrcByte = UInt8(cleanResponse.dropFirst(4).prefix(2), radix: 16) ?? 0
@@ -136,10 +136,10 @@ public final class KWP2000Client {
     /// Écrit un paramètre local (LID) via le Service 3B (Write Data By Local Identifier)
     public func writeLocalIdentifier(lid: UInt8, data: String) async throws -> String {
         let hexLid = String(format: "%02X", lid)
-        let cleanData = data.replacingOccurrences(of: " ", with: "")
+        let cleanData = data.replacing( " ", with: "")
         let command = "3B" + hexLid + cleanData
         let response = try await interface.sendDiagnosticRequest(command, timeout: 2.0)
-        let cleanResponse = response.replacingOccurrences(of: " ", with: "").uppercased()
+        let cleanResponse = response.replacing( " ", with: "").uppercased()
 
         if cleanResponse.hasPrefix("7F3B") {
             let nrcByte = UInt8(cleanResponse.dropFirst(4).prefix(2), radix: 16) ?? 0
@@ -158,7 +158,7 @@ public final class KWP2000Client {
     public func performSecurityAccess(level: UInt8, keyCalculator: @Sendable (String) -> String) async throws {
         let requestSeedCmd = String(format: "27%02X", level)
         let seedResponse = try await interface.sendDiagnosticRequest(requestSeedCmd, timeout: 2.0)
-        let cleanSeedResp = seedResponse.replacingOccurrences(of: " ", with: "").uppercased()
+        let cleanSeedResp = seedResponse.replacing( " ", with: "").uppercased()
 
         if cleanSeedResp.hasPrefix("7F27") {
             let nrcByte = UInt8(cleanSeedResp.dropFirst(4).prefix(2), radix: 16) ?? 0
@@ -175,10 +175,10 @@ public final class KWP2000Client {
             return
         }
 
-        let calculatedKey = keyCalculator(seed).replacingOccurrences(of: " ", with: "").uppercased()
+        let calculatedKey = keyCalculator(seed).replacing( " ", with: "").uppercased()
         let sendKeyCmd = String(format: "27%02X", level + 1) + calculatedKey
         let keyResponse = try await interface.sendDiagnosticRequest(sendKeyCmd, timeout: 2.0)
-        let cleanKeyResp = keyResponse.replacingOccurrences(of: " ", with: "").uppercased()
+        let cleanKeyResp = keyResponse.replacing( " ", with: "").uppercased()
 
         if cleanKeyResp.hasPrefix("7F27") {
             let nrcByte = UInt8(cleanKeyResp.dropFirst(4).prefix(2), radix: 16) ?? 0
@@ -195,7 +195,7 @@ public final class KWP2000Client {
     public func readECUIdentification(option: UInt8 = 0x80) async throws -> String {
         let command = String(format: "1A%02X", option)
         let response = try await interface.sendDiagnosticRequest(command, timeout: 2.0)
-        let clean = response.replacingOccurrences(of: " ", with: "").uppercased()
+        let clean = response.replacing( " ", with: "").uppercased()
 
         if clean.hasPrefix("7F1A") {
             let nrc = UInt8(clean.dropFirst(4).prefix(2), radix: 16) ?? 0
@@ -212,9 +212,9 @@ public final class KWP2000Client {
 
     /// Efface la mémoire des défauts (Service 14)
     public func clearDiagnosticInformation(group: String = "FFFFFF") async throws {
-        let command = "14" + group.replacingOccurrences(of: " ", with: "").uppercased()
+        let command = "14" + group.replacing( " ", with: "").uppercased()
         let response = try await interface.sendDiagnosticRequest(command, timeout: 3.0)
-        let clean = response.replacingOccurrences(of: " ", with: "").uppercased()
+        let clean = response.replacing( " ", with: "").uppercased()
 
         if clean.hasPrefix("7F14") {
             let nrc = UInt8(clean.dropFirst(4).prefix(2), radix: 16) ?? 0
@@ -228,9 +228,9 @@ public final class KWP2000Client {
 
     /// Lit les DTCs par masque de statut (Service 18)
     public func readDTCByStatus(statusMask: UInt8 = 0x02, group: String = "FF00") async throws -> String {
-        let command = String(format: "18%02X", statusMask) + group.replacingOccurrences(of: " ", with: "").uppercased()
+        let command = String(format: "18%02X", statusMask) + group.replacing( " ", with: "").uppercased()
         let response = try await interface.sendDiagnosticRequest(command, timeout: 3.0)
-        let clean = response.replacingOccurrences(of: " ", with: "").uppercased()
+        let clean = response.replacing( " ", with: "").uppercased()
 
         if clean.hasPrefix("7F18") {
             let nrc = UInt8(clean.dropFirst(4).prefix(2), radix: 16) ?? 0
@@ -248,7 +248,7 @@ public final class KWP2000Client {
     public func sendTesterPresent(suppressResponse: Bool = false) async throws {
         let command = suppressResponse ? "3E80" : "3E00"
         let response = try await interface.sendDiagnosticRequest(command, timeout: 1.0)
-        let clean = response.replacingOccurrences(of: " ", with: "").uppercased()
+        let clean = response.replacing( " ", with: "").uppercased()
 
         if !suppressResponse {
             if clean.hasPrefix("7F3E") {
@@ -283,7 +283,7 @@ public final class KWP2000Client {
         let sizeHex = String(format: "%06X", uncompressedSize)
         let command = "35" + addrHex + sizeHex
         let response = try await interface.sendDiagnosticRequest(command, timeout: 3.0)
-        let clean = response.replacingOccurrences(of: " ", with: "").uppercased()
+        let clean = response.replacing( " ", with: "").uppercased()
 
         if clean.hasPrefix("7F35") {
             let nrc = UInt8(clean.dropFirst(4).prefix(2), radix: 16) ?? 0
@@ -301,7 +301,7 @@ public final class KWP2000Client {
         let sizeHex = String(format: "%06X", uncompressedSize)
         let command = "34" + addrHex + sizeHex
         let response = try await interface.sendDiagnosticRequest(command, timeout: 3.0)
-        let clean = response.replacingOccurrences(of: " ", with: "").uppercased()
+        let clean = response.replacing( " ", with: "").uppercased()
 
         if clean.hasPrefix("7F34") {
             let nrc = UInt8(clean.dropFirst(4).prefix(2), radix: 16) ?? 0
@@ -316,10 +316,10 @@ public final class KWP2000Client {
     /// Transfert d'un bloc de données (Service 36 - Transfer Data)
     public func transferData(blockSequenceCounter: UInt8, payload: String = "") async throws -> String {
         let blockHex = String(format: "%02X", blockSequenceCounter)
-        let cleanPayload = payload.replacingOccurrences(of: " ", with: "").uppercased()
+        let cleanPayload = payload.replacing( " ", with: "").uppercased()
         let command = "36" + blockHex + cleanPayload
         let response = try await interface.sendDiagnosticRequest(command, timeout: 2.5)
-        let clean = response.replacingOccurrences(of: " ", with: "").uppercased()
+        let clean = response.replacing( " ", with: "").uppercased()
 
         if clean.hasPrefix("7F36") {
             let nrc = UInt8(clean.dropFirst(4).prefix(2), radix: 16) ?? 0
@@ -334,7 +334,7 @@ public final class KWP2000Client {
     /// Sortie du mode transfert (Service 37 - Request Transfer Exit)
     public func requestTransferExit() async throws -> String {
         let response = try await interface.sendDiagnosticRequest("37", timeout: 2.0)
-        let clean = response.replacingOccurrences(of: " ", with: "").uppercased()
+        let clean = response.replacing( " ", with: "").uppercased()
 
         if clean.hasPrefix("7F37") {
             let nrc = UInt8(clean.dropFirst(4).prefix(2), radix: 16) ?? 0
@@ -350,10 +350,10 @@ public final class KWP2000Client {
     public func startRoutine(routineType: UInt8 = 0x01, routineId: UInt16, options: String = "") async throws -> String {
         let cmdType = String(format: "%02X", routineType)
         let cmdId = String(format: "%04X", routineId)
-        let cleanOptions = options.replacingOccurrences(of: " ", with: "").uppercased()
+        let cleanOptions = options.replacing( " ", with: "").uppercased()
         let command = "31" + cmdType + cmdId + cleanOptions
         let response = try await interface.sendDiagnosticRequest(command, timeout: 4.0)
-        let clean = response.replacingOccurrences(of: " ", with: "").uppercased()
+        let clean = response.replacing( " ", with: "").uppercased()
 
         if clean.hasPrefix("7F31") {
             let nrc = UInt8(clean.dropFirst(4).prefix(2), radix: 16) ?? 0
@@ -369,7 +369,7 @@ public final class KWP2000Client {
     public func ecuReset(resetType: UInt8 = 0x01) async throws {
         let command = String(format: "11%02X", resetType)
         let response = try await interface.sendDiagnosticRequest(command, timeout: 2.0)
-        let clean = response.replacingOccurrences(of: " ", with: "").uppercased()
+        let clean = response.replacing( " ", with: "").uppercased()
 
         if clean.hasPrefix("7F11") {
             let nrc = UInt8(clean.dropFirst(4).prefix(2), radix: 16) ?? 0

@@ -60,7 +60,7 @@ public actor DoIPClient: VehicleInterface {
             throw NSError(domain: "DoIPClient", code: -1, userInfo: [NSLocalizedDescriptionKey: "DoIP non connecté"])
         }
 
-        let cleanHex = requestHex.replacingOccurrences(of: " ", with: "")
+        let cleanHex = requestHex.replacing( " ", with: "")
         guard let udsPayload = HexParsing.bytes(cleanHex) else {
             throw NSError(domain: "DoIPClient", code: -2, userInfo: [NSLocalizedDescriptionKey: "Payload hexadécimal invalide: \(requestHex)"])
         }
